@@ -7,7 +7,7 @@ import (
 )
 
 type Service interface {
-	GetRandomJoke(context.Context) (*ApiBody, error)
+	GetRandomJoke(context.Context, *http.Request) (*ApiBody, error)
 }
 
 type RandomJokeService struct {
@@ -22,7 +22,7 @@ func NewRandomJokeService(url string, key string) Service {
 	}
 }
 
-func (rjs *RandomJokeService) GetRandomJoke(ctx context.Context) (*ApiBody, error) {
+func (rjs *RandomJokeService) GetRandomJoke(ctx context.Context, _ *http.Request) (*ApiBody, error) {
 	client := &http.Client{}
 	req, _ := http.NewRequest("GET", "https://api.api-ninjas.com/v1/dadjokes?limit=1", nil)
 	req.Header.Set("X-Api-Key", rjs.apiKey)
@@ -46,12 +46,21 @@ func (rjs *RandomJokeService) GetRandomJoke(ctx context.Context) (*ApiBody, erro
 
 	var jokes []RandomJoke
 	if err := json.NewDecoder(res.Body).Decode(&jokes); err != nil {
-		apiBody.Errors = append(apiBody.Errors, err.Error())
+		// TODO: Do not send back: "body":{"joke":""} if
+		// apiBody.Body = nil;
+		apiBody.Errors = append(apiBody.Errors, "Error parsing json")
 		return apiBody, err
 	}
 
 	if len(jokes) > 0 {
 		apiBody.Body = jokes[0]
 	}
+	/*
+		else {
+			// TODO: Do not send back: "body":{"joke":""} if
+			// apiBody.Body = nil;
+		}
+	*/
+
 	return apiBody, err
 }

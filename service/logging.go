@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 )
 
@@ -16,9 +17,10 @@ func NewLoggingService(next Service) Service {
 	}
 }
 
-func (ls *LoggingService) GetRandomJoke(ctx context.Context) (joke *ApiBody, err error) {
+func (ls *LoggingService) GetRandomJoke(ctx context.Context, r *http.Request) (joke *ApiBody, err error) {
 	defer func(start time.Time) {
-		fmt.Printf("status=%v err=%s time=%v", joke.Code, err, time.Since(start))
+		// Send log to logging service
+		fmt.Printf("\nstatus=%v path=%s err=%s time=%v\n", joke.Code, r.URL.Path, err, time.Since(start))
 	}(time.Now())
-	return ls.next.GetRandomJoke(ctx)
+	return ls.next.GetRandomJoke(ctx, r)
 }
