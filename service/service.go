@@ -7,7 +7,7 @@ import (
 )
 
 type Service interface {
-	GetRandomJoke(context.Context) (*RandomJoke, error)
+	GetRandomJoke(context.Context) (*ApiBody, error)
 }
 
 type RandomJokeService struct {
@@ -22,21 +22,36 @@ func NewRandomJokeService(url string, key string) Service {
 	}
 }
 
-func (rjs *RandomJokeService) GetRandomJoke(ctx context.Context) (*RandomJoke, error) {
-	resp, err := http.Get(rjs.url)
-	resp.Header.Add("X-Api-Key", rjs.apiKey)
-
+func (rjs *RandomJokeService) GetRandomJoke(ctx context.Context) (*ApiBody, error) {
+	client := &http.Client{}
+	req, _ := http.NewRequest("GET", "https://api.api-ninjas.com/v1/dadjokes?limit=1", nil)
+	req.Header.Set("X-Api-Key", rjs.apiKey)
+	res, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer res.Body.Close()
 
-	joke := &RandomJoke{}
-	if err := json.NewDecoder(resp.Body).Decode(joke); err != nil {
-		return nil, err
+	/*
+		// Debug printing the response
+		bodyBytes, _ := io.ReadAll(res.Body)
+		bodyString := string(bodyBytes)
+		fmt.Printf("%+v", bodyString)
+	*/
+
+	apiBody := &ApiBody{
+		Code:      res.StatusCode,
+		HasErrors: res.StatusCode != http.StatusOK,
 	}
-	return joke, err
-}
 
-// urlData := UrlData{Limit: 1, Version: "v1", Key: GetApiKey()}
-// 	tmpl, err := template.New("test").Parse("https://api.api-ninjas.com/{{.Version}}/dadjokes?limit={{.Limit}}")
+	var jokes []RandomJoke
+	if err := json.NewDecoder(res.Body).Decode(&jokes); err != nil {
+		apiBody.Errors = append(apiBody.Errors, err.Error())
+		return apiBody, err
+	}
+
+	if len(jokes) > 0 {
+		apiBody.Body = jokes[0]
+	}
+	return apiBody, err
+}

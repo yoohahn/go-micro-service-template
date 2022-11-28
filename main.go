@@ -1,43 +1,23 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"io"
-	"net/http"
+	"go-micro-service-template/service"
+	"log"
 	"os"
 )
 
 func main() {
+	svc := service.NewRandomJokeService("https://api.api-ninjas.com/v1/dadjokes?limit=1", os.Getenv("API_NINJAS"))
+	svc = service.NewLoggingService(svc)
+	joke, err := svc.GetRandomJoke(context.TODO())
 
-	apiKey := os.Getenv("API_NINJAS")
-	fmt.Println(apiKey)
-	// NewRandomJokeService("https://api.api-ninjas.com/v1/dadjokes?limit=1", apiKey)
-	// svc = NewLoggingService(svc)
-
-	// joke, err := svc.GetRandomJoke(context.TODO())
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// fmt.Printf("%+v", joke)
-
-	client := &http.Client{}
-	req, _ := http.NewRequest("GET", "https://api.api-ninjas.com/v1/dadjokes?limit=1", nil)
-	req.Header.Set("X-Api-Key", apiKey)
-	res, _ := client.Do(req)
-
-	defer res.Body.Close()
-
-	fmt.Println(res.StatusCode)
-	if res.StatusCode == http.StatusOK {
-		// jokes := &service.DecodedRandomJoke{}
-
-		// json.NewDecoder(res.Body).Decode(jokes)
-		// fmt.Printf("%+v", jokes)
-
-		bodyBytes, _ := io.ReadAll(res.Body)
-
-		bodyString := string(bodyBytes)
-		fmt.Printf("%+v", bodyString)
+	if err != nil {
+		log.Fatal(err)
 	}
 
+	fmt.Println("\n<--->")
+	fmt.Println("")
+	fmt.Printf("%v", joke)
 }

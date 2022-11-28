@@ -4,13 +4,11 @@ type RandomJoke struct {
 	Joke string `json:"joke"`
 }
 
-type DecodedRandomJoke struct {
-	Jokes []RandomJoke `json:"jokes"`
-}
+type EmptyStruct struct{}
 
-/*
-./bin/joke
------
-200
-[{"joke": "What do you put on a lonely grilled cheese sandwich? Provolone, but only if you have it\u2019s parmesan."}]%
-*/
+type ApiBody struct {
+	Code      int        `json:"code"`
+	Body      RandomJoke `json:"body"`
+	Errors    []string   `json:"errors"`
+	HasErrors bool       `json:"hasErrors"`
+}
