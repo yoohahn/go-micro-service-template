@@ -1,3 +1,3 @@
-module github.com/yoohahn/go-micro-service-template
+module go-micro-service-template
 
 go 1.19
